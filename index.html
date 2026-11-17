@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="平均成本">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>加碼平均成本計算</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;display:flex;justify-content:center;padding:24px 16px env(safe-area-inset-bottom)}
+  main{width:100%;max-width:420px}
+  h1{font-size:1.4rem;margin:8px 0 20px;text-align:center}
+  label{display:block;font-size:.95rem;margin:14px 0 6px;color:#9da7b3}
+  input{width:100%;padding:14px;font-size:1.15rem;border-radius:10px;border:1px solid #30363d;background:#161b22;color:#e6edf3}
+  input:focus{outline:2px solid #1f6feb;border-color:transparent}
+  button{width:100%;margin-top:22px;padding:15px;font-size:1.15rem;border:0;border-radius:10px;background:#1f6feb;color:#fff;font-weight:600}
+  button:active{opacity:.85}
+  #out{margin-top:22px;padding:16px;border-radius:10px;background:#161b22;border:1px solid #30363d;display:none;line-height:1.7}
+  #out.err{border-color:#f85149;color:#ff7b72}
+  .big{font-size:1.6rem;font-weight:700;color:#58a6ff}
+</style>
+</head>
+<body>
+<main>
+  <h1>📈 加碼平均成本計算</h1>
+  <form id="f" novalidate>
+    <label for="p">原本平均買進價格 P</label>
+    <input id="p" inputmode="decimal" autocomplete="off">
+    <label for="x">目前持有股數 X</label>
+    <input id="x" inputmode="decimal" autocomplete="off">
+    <label for="q">新買進價格 Q</label>
+    <input id="q" inputmode="decimal" autocomplete="off">
+    <label for="y">新買進股數 Y</label>
+    <input id="y" inputmode="decimal" autocomplete="off">
+    <button type="submit">計算</button>
+  </form>
+  <div id="out"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const names = {p:"P 原本平均價格", x:"X 持有股數", q:"Q 新買進價格", y:"Y 新買進股數"};
+const fmt = (n, d) => n.toLocaleString("zh-TW", {maximumFractionDigits: d});
+$("f").addEventListener("submit", e => {
+  e.preventDefault();
+  const out = $("out"); out.style.display = "block";
+  const v = {};
+  for (const k of ["p","x","q","y"]) {
+    const raw = $(k).value.trim().replace(/,/g, "");
+    const n = Number(raw);
+    if (raw === "" || !isFinite(n) || n < 0) {
+      out.className = "err"; out.textContent = "輸入錯誤：" + names[k] + " 請填入有效的數字。";
+      $(k).focus(); return;
+    }
+    v[k] = n;
+  }
+  const total = v.x + v.y;
+  if (total === 0) { out.className = "err"; out.textContent = "錯誤：總股數為 0，無法計算。"; return; }
+  const cost = v.p * v.x + v.q * v.y;
+  out.className = "";
+  out.innerHTML = '新的平均價格<br><span class="big">' + fmt(cost / total, 4) + '</span><br>總股數：' + fmt(total, 4) + ' 股<br>總成本：' + fmt(cost, 2);
+});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
